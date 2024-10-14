@@ -9,6 +9,11 @@
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         .gnome-container {
@@ -82,6 +87,16 @@
         .btn:hover {
             background-color: #45a049;
         }
+
+        footer {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -93,9 +108,27 @@
     <div class="controls">
         <label for="bpmSlider">BPM: <span id="bpmValue">60</span></label>
         <input type="range" id="bpmSlider" class="slider" min="40" max="200" value="60">
+
+        <!-- Time Signature -->
+        <div>
+            <label for="beatsPerMeasure">Beats per Measure:</label>
+            <input type="number" id="beatsPerMeasure" value="4" min="1">
+            <label for="noteValue">Note Value:</label>
+            <select id="noteValue">
+                <option value="4">Quarter Notes</option>
+                <option value="8">Eighth Notes</option>
+                <option value="16">Sixteenth Notes</option>
+            </select>
+        </div>
+
         <button class="btn" id="startBtn">Start</button>
         <button class="btn" id="stopBtn">Stop</button>
     </div>
+
+    <!-- Footer Section -->
+    <footer>
+        &copy; 2024 Metro Gnome | Created by You
+    </footer>
 
     <script>
         const foot = document.getElementById('foot');
@@ -103,16 +136,22 @@
         const bpmValue = document.getElementById('bpmValue');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const beatsPerMeasure = document.getElementById('beatsPerMeasure');
+        const noteValue = document.getElementById('noteValue');
 
         let bpm = bpmSlider.value;
         let interval;
+        let msPerBeat = 60000 / bpm;
+        let nextBeatTime = 0;
+        let currentBeat = 0;
+        let isRunning = false;
 
-        // Function to play a beep (500Hz for 40ms)
-        function playBeep() {
+        // Function to play a beep with varying pitch
+        function playBeep(frequency) {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            oscillator.frequency.setValueAtTime(500, audioCtx.currentTime); // 500Hz tone
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime); // Set beep frequency
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             oscillator.start();
@@ -121,35 +160,60 @@
             }, 40); // Beep for 40ms
         }
 
-        // Function to set BPM and rotate the foot
-        function setBPM(newBPM) {
-            clearInterval(interval);
-            const msPerBeat = 60000 / newBPM;
+        // Function to calculate the frequency based on the beat number
+        function getFrequency(beat) {
+            // Downbeat (start of measure) has a lower pitch (300Hz), others higher (500Hz)
+            return beat === 0 ? 300 : 500;
+        }
 
-            interval = setInterval(() => {
+        // Function to animate the foot and play the beep
+        function animateFoot(timestamp) {
+            if (!isRunning) return; // Stop animation if metronome is stopped
+
+            if (timestamp >= nextBeatTime) {
+                nextBeatTime = timestamp + msPerBeat;
+
+                // Rotate the foot down and play a beep at the appropriate frequency
                 foot.style.transform = 'rotate(-35deg)';
-                playBeep(); // Play beep with the foot tap
+                playBeep(getFrequency(currentBeat));
+
+                // Rotate foot back to 0 degrees after half the beat duration
                 setTimeout(() => {
                     foot.style.transform = 'rotate(0deg)';
                 }, msPerBeat / 2);
-            }, msPerBeat);
+
+                // Update the beat count
+                currentBeat = (currentBeat + 1) % beatsPerMeasure.value;
+            }
+
+            requestAnimationFrame(animateFoot);
         }
 
-        // BPM slider control
+        // Update msPerBeat dynamically based on BPM slider input
         bpmSlider.addEventListener('input', (e) => {
             bpm = e.target.value;
             bpmValue.textContent = bpm;
+            msPerBeat = 60000 / bpm / (parseInt(noteValue.value) / 4); // Adjust for note value
         });
 
         // Start button functionality
         startBtn.addEventListener('click', () => {
-            setBPM(bpm);
+            if (isRunning) return;
+            nextBeatTime = performance.now(); // Start immediately
+            currentBeat = 0;
+            isRunning = true;
+            requestAnimationFrame(animateFoot);
         });
 
         // Stop button functionality
         stopBtn.addEventListener('click', () => {
-            clearInterval(interval);
+            isRunning = false;
             foot.style.transform = 'rotate(0deg)'; // Reset foot position
+        });
+
+        // Adjust msPerBeat when the note value changes
+        noteValue.addEventListener('change', () => {
+            msPerBeat = 60000 / bpm / (parseInt(noteValue.value) / 4);
         });
     </script>
 </body>
