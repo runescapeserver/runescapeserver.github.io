@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetroGnome 1.0</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        .gnome-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 50px;
+        }
+
+        .gnome {
+            width: 300px;
+        }
+
+        .foot {
+            position: absolute;
+            width: 100px;
+            transform-origin: top center;
+            transform: rotate(0deg);
+            transition: transform 0.1s ease-in-out;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        input[type="range"] {
+            width: 300px;
+            margin-bottom: 10px;
+        }
+
+        #bpmValue, #xValue, #yValue {
+            font-weight: bold;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="gnome-container">
+        <img src="metrognome.png" alt="Metro Gnome" class="gnome">
+        <img src="foot.png" alt="Gnome Foot" class="foot" id="foot">
+    </div>
+
+    <div class="controls">
+        <label for="bpmSlider">BPM: <span id="bpmValue">60</span></label>
+        <input type="range" id="bpmSlider" min="40" max="200" value="60">
+
+        <label for="xSlider">Foot X Position: <span id="xValue">50</span>%</label>
+        <input type="range" id="xSlider" min="0" max="100" value="50">
+
+        <label for="ySlider">Foot Y Position: <span id="yValue">0</span>px</label>
+        <input type="range" id="ySlider" min="-200" max="200" value="0">
+    </div>
+
+    <script>
+        const foot = document.getElementById('foot');
+        const bpmSlider = document.getElementById('bpmSlider');
+        const bpmValue = document.getElementById('bpmValue');
+        const xSlider = document.getElementById('xSlider');
+        const ySlider = document.getElementById('ySlider');
+        const xValue = document.getElementById('xValue');
+        const yValue = document.getElementById('yValue');
+
+        let bpm = bpmSlider.value;
+        let interval;
+
+        // Function to set BPM and rotate the foot
+        function setBPM(newBPM) {
+            clearInterval(interval);
+            const msPerBeat = 60000 / newBPM;
+
+            interval = setInterval(() => {
+                foot.style.transform = 'rotate(35deg)';
+                setTimeout(() => {
+                    foot.style.transform = 'rotate(0deg)';
+                }, msPerBeat / 2);
+            }, msPerBeat);
+        }
+
+        // BPM slider control
+        bpmSlider.addEventListener('input', (e) => {
+            bpm = e.target.value;
+            bpmValue.textContent = bpm;
+            setBPM(bpm);
+        });
+
+        // Set initial BPM
+        setBPM(bpm);
+
+        // X and Y position control for the foot
+        xSlider.addEventListener('input', (e) => {
+            const xPos = e.target.value;
+            xValue.textContent = xPos;
+            foot.style.left = `${xPos}%`;
+        });
+
+        ySlider.addEventListener('input', (e) => {
+            const yPos = e.target.value;
+            yValue.textContent = yPos;
+            foot.style.bottom = `${yPos}px`;
+        });
+
+        // Set initial positions
+        foot.style.left = `${xSlider.value}%`;
+        foot.style.bottom = `${ySlider.value}px`;
+    </script>
+</body>
+</html>
