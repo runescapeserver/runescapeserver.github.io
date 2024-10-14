@@ -23,6 +23,9 @@
 
         .foot {
             position: absolute;
+            width: 62px; /* Locked foot size */
+            left: 53%;   /* Locked X position */
+            bottom: 14px; /* Locked Y position */
             transform-origin: top center;
             transform: rotate(0deg);
             transition: transform 0.1s ease-in-out;
@@ -32,18 +35,52 @@
             margin-top: 20px;
         }
 
-        input[type="range"] {
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
             width: 300px;
-            margin-bottom: 10px;
+            height: 10px;
+            background: #ddd;
+            outline: none;
+            border-radius: 5px;
+            margin: 10px 0;
         }
 
-        #bpmValue, #xValue, #yValue, #sizeValue {
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #bpmValue {
             font-weight: bold;
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
+        .btn {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -55,31 +92,34 @@
 
     <div class="controls">
         <label for="bpmSlider">BPM: <span id="bpmValue">60</span></label>
-        <input type="range" id="bpmSlider" min="40" max="200" value="60">
-
-        <label for="xSlider">Foot X Position: <span id="xValue">50</span>%</label>
-        <input type="range" id="xSlider" min="0" max="100" value="50">
-
-        <label for="ySlider">Foot Y Position: <span id="yValue">0</span>px</label>
-        <input type="range" id="ySlider" min="-200" max="200" value="0">
-
-        <label for="sizeSlider">Foot Size: <span id="sizeValue">100</span>px</label>
-        <input type="range" id="sizeSlider" min="50" max="200" value="100">
+        <input type="range" id="bpmSlider" class="slider" min="40" max="200" value="60">
+        <button class="btn" id="startBtn">Start</button>
+        <button class="btn" id="stopBtn">Stop</button>
     </div>
 
     <script>
         const foot = document.getElementById('foot');
         const bpmSlider = document.getElementById('bpmSlider');
         const bpmValue = document.getElementById('bpmValue');
-        const xSlider = document.getElementById('xSlider');
-        const ySlider = document.getElementById('ySlider');
-        const xValue = document.getElementById('xValue');
-        const yValue = document.getElementById('yValue');
-        const sizeSlider = document.getElementById('sizeSlider');
-        const sizeValue = document.getElementById('sizeValue');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
 
         let bpm = bpmSlider.value;
         let interval;
+
+        // Function to play a beep (500Hz for 40ms)
+        function playBeep() {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.frequency.setValueAtTime(500, audioCtx.currentTime); // 500Hz tone
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, 40); // Beep for 40ms
+        }
 
         // Function to set BPM and rotate the foot
         function setBPM(newBPM) {
@@ -87,7 +127,8 @@
             const msPerBeat = 60000 / newBPM;
 
             interval = setInterval(() => {
-                foot.style.transform = 'rotate(35deg)';
+                foot.style.transform = 'rotate(-35deg)';
+                playBeep(); // Play beep with the foot tap
                 setTimeout(() => {
                     foot.style.transform = 'rotate(0deg)';
                 }, msPerBeat / 2);
@@ -98,36 +139,18 @@
         bpmSlider.addEventListener('input', (e) => {
             bpm = e.target.value;
             bpmValue.textContent = bpm;
+        });
+
+        // Start button functionality
+        startBtn.addEventListener('click', () => {
             setBPM(bpm);
         });
 
-        // Set initial BPM
-        setBPM(bpm);
-
-        // X and Y position control for the foot
-        xSlider.addEventListener('input', (e) => {
-            const xPos = e.target.value;
-            xValue.textContent = xPos;
-            foot.style.left = `${xPos}%`;
+        // Stop button functionality
+        stopBtn.addEventListener('click', () => {
+            clearInterval(interval);
+            foot.style.transform = 'rotate(0deg)'; // Reset foot position
         });
-
-        ySlider.addEventListener('input', (e) => {
-            const yPos = e.target.value;
-            yValue.textContent = yPos;
-            foot.style.bottom = `${yPos}px`;
-        });
-
-        // Foot size control
-        sizeSlider.addEventListener('input', (e) => {
-            const size = e.target.value;
-            sizeValue.textContent = size;
-            foot.style.width = `${size}px`;
-        });
-
-        // Set initial positions and size
-        foot.style.left = `${xSlider.value}%`;
-        foot.style.bottom = `${ySlider.value}px`;
-        foot.style.width = `${sizeSlider.value}px`;
     </script>
 </body>
 </html>
