@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metro Gnome</title>
+    <title>MetroGnome 1.4</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -127,7 +127,7 @@
 
     <!-- Footer Section -->
     <footer>
-        &copy; 2024 Metro Gnome | Created by You
+     Metro Gnome 1.4 | Made by the students of MMS
     </footer>
 
     <script>
@@ -162,8 +162,8 @@
 
         // Function to calculate the frequency based on the beat number
         function getFrequency(beat) {
-            // Downbeat (start of measure) has a lower pitch (300Hz), others higher (500Hz)
-            return beat === 0 ? 300 : 500;
+            // Downbeat (start of measure) has a lower pitch (600Hz), others higher (500Hz)
+            return beat === 0 ? 600 : 500;
         }
 
         // Function to animate the foot and play the beep
@@ -173,13 +173,15 @@
             if (timestamp >= nextBeatTime) {
                 nextBeatTime = timestamp + msPerBeat;
 
-                // Rotate the foot down and play a beep at the appropriate frequency
+                // Rotate the foot down first
                 foot.style.transform = 'rotate(-35deg)';
-                playBeep(getFrequency(currentBeat));
 
-                // Rotate foot back to 0 degrees after half the beat duration
+                // After half the beat duration, rotate foot back up and play the beep
                 setTimeout(() => {
                     foot.style.transform = 'rotate(0deg)';
+
+                    // Only play the beep when the foot is at 0 degrees
+                    playBeep(getFrequency(currentBeat));
                 }, msPerBeat / 2);
 
                 // Update the beat count
